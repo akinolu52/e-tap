@@ -27,7 +27,6 @@ export default function App() {
       <StatusBar style="auto" />
 
       <View style={styles.mapContainer}>
-        {/* {userLocation && ( */}
         <MapView
           ref={mapRef}
           style={styles.map}
@@ -43,30 +42,22 @@ export default function App() {
           {markers.map(marker => (
             <Marker
               key={marker.id}
-              draggable
               tracksViewChanges={false}
               coordinate={marker.coordinate}
               title={marker.title}
-              onDragEnd={(e) => {
-                console.log(e.nativeEvent.coordinate, e)
-                // this.setState({
-                //   lastLat: e.nativeEvent.coordinate.latitude,
-                //   lastLong: e.nativeEvent.coordinate.longitude,
-                // })
-              }}
             />
           ))}
         </MapView>
-        {/* )} */}
 
         <View style={styles.zoomButtons}>
           <TouchableOpacity
             onPress={zoomIn}
             disabled={zoom === MAX_ZOOM_LEVEL}
+            style={styles.zoomButton}
           >
             <Ionicons
               name="add"
-              size={22}
+              size={28}
               style={{ opacity: zoom === MAX_ZOOM_LEVEL ? 0.2 : 1 }}
             />
           </TouchableOpacity>
@@ -74,10 +65,11 @@ export default function App() {
           <TouchableOpacity
             onPress={zoomOut}
             disabled={zoom === MIN_ZOOM_LEVEL}
+            style={styles.zoomButton}
           >
             <Ionicons
               name="remove"
-              size={22}
+              size={28}
               style={{ opacity: zoom === MIN_ZOOM_LEVEL ? 0.2 : 1 }}
             />
           </TouchableOpacity>
@@ -86,7 +78,7 @@ export default function App() {
         </View>
       </View>
 
-      <View style={styles.buttonContainer}>
+      <View style={styles.trackButtons}>
         <Text>Tracking Status: {trackingStatus ? 'Tracking' : 'Not Tracking'}</Text>
 
         <TouchableOpacity onPress={!trackingStatus ? startTracking : stopTracking}>
@@ -116,19 +108,25 @@ const styles = StyleSheet.create({
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
   },
-  buttonContainer: {
+  trackButtons: {
     // padding: 16,
     backgroundColor: 'white',
     bottom: 50,
-    right: 10,
+    left: 16,
     position: 'absolute',
     borderWidth: 1,
     borderColor: 'red',
   },
   zoomButtons: {
     position: 'absolute',
-    top: 50,
+    bottom: 60,
     right: 16,
     flexDirection: 'column',
+    gap: 8,
   },
+  zoomButton: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#ccc'
+  }
 });
