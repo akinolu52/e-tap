@@ -1,15 +1,19 @@
+import { Toasts } from '@backpackapp-io/react-native-toast';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StatusBar } from 'expo-status-bar';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useLocation } from './useLocation';
 
 export default function App() {
   const {
     trackingStatus,
     startTracking,
-    markers,
+    pauseTracking,
     stopTracking,
+    markers,
     userLocation,
     setUserLocation,
     mapRef,
@@ -18,81 +22,99 @@ export default function App() {
     zoom,
     MIN_ZOOM_LEVEL,
     MAX_ZOOM_LEVEL,
+    isAnimating,
+    setIsAnimating,
   } = useLocation();
 
-  // console.log('userLocation: ', userLocation);
-
   return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <View style={styles.container}>
+          <StatusBar style="auto" />
 
-      <View style={styles.mapContainer}>
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={userLocation}
-          onRegionChangeComplete={setUserLocation}
-          zoomControlEnabled
-          zoomEnabled
-          showsUserLocation
-          followsUserLocation
-          loadingEnabled
-          provider={PROVIDER_GOOGLE}
-        >
-          {markers.map(marker => (
-            <Marker
-              key={marker.id}
-              tracksViewChanges={false}
-              coordinate={marker.coordinate}
-              title={marker.title}
-            />
-          ))}
-        </MapView>
+          <View style={styles.mapContainer}>
+            <MapView
+              ref={mapRef}
+              style={styles.map}
+              initialRegion={userLocation}
+              onRegionChangeComplete={setUserLocation}
+              zoomControlEnabled
+              zoomEnabled
+              showsUserLocation
+              followsUserLocation
+              loadingEnabled
+              provider={PROVIDER_GOOGLE}
+            >
+              {markers.map(marker => (
+                <Marker
+                  key={marker.id}
+                  tracksViewChanges={false}
+                  coordinate={marker.coordinate}
+                  title={marker.title}
+                />
+              ))}
+            </MapView>
 
-        <View style={styles.zoomButtons}>
-          <TouchableOpacity
-            onPress={zoomIn}
-            disabled={zoom === MAX_ZOOM_LEVEL}
-            style={styles.zoomButton}
-          >
-            <Ionicons
-              name="add"
-              size={28}
-              style={{ opacity: zoom === MAX_ZOOM_LEVEL ? 0.2 : 1 }}
-            />
-          </TouchableOpacity>
+            <View style={styles.zoomButtons}>
+              <TouchableOpacity
+                onPress={zoomIn}
+                disabled={zoom === MAX_ZOOM_LEVEL}
+                style={styles.iconButton}
+              >
+                <Ionicons
+                  name="add"
+                  size={28}
+                  style={{ opacity: zoom === MAX_ZOOM_LEVEL ? 0.2 : 1 }}
+                />
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={zoomOut}
-            disabled={zoom === MIN_ZOOM_LEVEL}
-            style={styles.zoomButton}
-          >
-            <Ionicons
-              name="remove"
-              size={28}
-              style={{ opacity: zoom === MIN_ZOOM_LEVEL ? 0.2 : 1 }}
-            />
-          </TouchableOpacity>
-          {/* <Button title="Zoom In" onPress={zoomIn} />
-          <Button title="Zoom Out" onPress={zoomOut} /> */}
+              <TouchableOpacity
+                onPress={zoomOut}
+                disabled={zoom === MIN_ZOOM_LEVEL}
+                style={styles.iconButton}
+              >
+                <Ionicons
+                  name="remove"
+                  size={28}
+                  style={{ opacity: zoom === MIN_ZOOM_LEVEL ? 0.2 : 1 }}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.trackButtons}>
+            <View style={styles.iconButton}>
+              <Ionicons
+                onPress={trackingStatus ? null : startTracking}
+                name='play-outline'
+                size={28}
+                color={isAnimating === "play" ? "green" : "gray"}
+              />
+            </View>
+
+            <View style={styles.iconButton}>
+              <Ionicons
+                onPress={!trackingStatus ? null : pauseTracking}
+                name='pause-outline'
+                size={28}
+                color={isAnimating === "pause" ? "orange" : "gray"}
+              />
+            </View>
+
+            <View style={styles.iconButton}>
+              <Ionicons
+                onPress={!trackingStatus ? null : stopTracking}
+                name='stop-outline'
+                size={28}
+                color={isAnimating === "stop" ? "red" : "gray"}
+              />
+            </View>
+          </View>
+
+          <Toasts />
         </View>
-      </View>
-
-      <View style={styles.trackButtons}>
-        <Text>Tracking Status: {trackingStatus ? 'Tracking' : 'Not Tracking'}</Text>
-
-        <TouchableOpacity onPress={!trackingStatus ? startTracking : stopTracking}>
-          {!trackingStatus ?
-            <Ionicons name='play-outline' size={32} color={trackingStatus ? "green" : "black"} />
-            :
-            <Ionicons name='pause-outline' size={32} color={!trackingStatus ? "red" : "black"} />
-          }
-        </TouchableOpacity>
-      </View>
-
-      {/* <Button title="Start Tracking"  disabled={trackingStatus} />
-        <Button title="Stop Tracking" onPress={} disabled={!trackingStatus} /> */}
-    </View>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -110,12 +132,17 @@ const styles = StyleSheet.create({
   },
   trackButtons: {
     // padding: 16,
-    backgroundColor: 'white',
+    position: 'absolute',
     bottom: 50,
     left: 16,
-    position: 'absolute',
+    gap: 8,
+    // borderWidth: 1,
+    // borderColor: 'red',
+  },
+  iconButton: {
+    backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: 'red',
+    borderColor: '#ccc'
   },
   zoomButtons: {
     position: 'absolute',
@@ -124,9 +151,4 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     gap: 8,
   },
-  zoomButton: {
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#ccc'
-  }
 });

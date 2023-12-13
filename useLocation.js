@@ -1,3 +1,4 @@
+import { toast } from '@backpackapp-io/react-native-toast';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useRef, useState } from "react";
@@ -38,6 +39,9 @@ export function useLocation() {
     const [locationSubscription, setLocationSubscription] = useState(null);
     const [geofenceRegions, setGeofenceRegions] = useState(geofences);
     const [isInsideGeofence, setIsInsideGeofence] = useState(false);
+    const [isAnimating, setIsAnimating] = useState("");
+
+    // console.log('isAnimating:: ', isAnimating);
 
     const mapRef = useRef(null);
 
@@ -70,6 +74,9 @@ export function useLocation() {
         const { status } = await Location.requestBackgroundPermissionsAsync();
 
         if (status === Location.PermissionStatus.GRANTED) {
+            toast('locating tracking started.', { width: 205 });
+
+            setIsAnimating("play")
             // Subscribe to location updates
             const locationSubscription = await Location.watchPositionAsync(
                 {
@@ -92,6 +99,7 @@ export function useLocation() {
                             { cancelable: false }
                         );
                     }
+                    toast('locating tracking received.', { width: 215 });
                     checkGeofenceStatus(location.coords);
                     const newRegion = {
                         latitude: location.coords.latitude,
@@ -120,12 +128,24 @@ export function useLocation() {
         }
     };
 
+    const pauseTracking = async () => {
+        if (locationSubscription) {
+            await locationSubscription.remove();
+            setLocationSubscription(null);
+        }
+        toast('locating tracking paused.', { width: 210 });
+        setTrackingStatus(false);
+        setIsAnimating("pause")
+    };
+
     const stopTracking = async () => {
         if (locationSubscription) {
             await locationSubscription.remove();
             setLocationSubscription(null);
         }
+        toast('locating tracking stopped.', { width: 210 });
         setTrackingStatus(false);
+        setIsAnimating("stop")
     };
 
     const zoomIn = () => {
@@ -220,6 +240,7 @@ export function useLocation() {
 
     return {
         startTracking,
+        pauseTracking,
         stopTracking,
 
         trackingStatus,
@@ -235,5 +256,8 @@ export function useLocation() {
 
         MIN_ZOOM_LEVEL,
         MAX_ZOOM_LEVEL,
+
+        isAnimating,
+        setIsAnimating,
     }
 }
